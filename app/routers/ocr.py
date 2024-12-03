@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends
 from ..models.ocr import ImageRequest, ImageResponse, ErrorResponse
 from ..services.image_processor import ImageProcessor
 from ..utils.exceptions import OCRException
+import torch
+torch.backends.nnpack.enabled = False
 
 router = APIRouter()
 
