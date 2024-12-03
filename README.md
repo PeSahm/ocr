@@ -1,41 +1,65 @@
-# OCR API
+# TesseractOCRWebApi
 
-A FastAPI-based web API that performs OCR (Optical Character Recognition) on base64-encoded images using EasyOCR.
+Tesseract OCR as a Web API.
 
-## Features
+**Read to Use** - Just execute a docker run or docker compose up.
 
-- Base64 image processing
-- Text extraction using EasyOCR
-- Dockerized application
-- RESTful API endpoints
+**Full Source Available** - Go to [github.com/luizcarlosfaria/TesseractOCRWebApi](https://github.com/luizcarlosfaria/TesseractOCRWebApi) and see all details about this project.
 
-## Setup and Running
+### How to deploy
 
-1. Build and run with Docker Compose:
-   ```bash
-   docker-compose up --build
-   ```
+```yml
+version: '3.4'
 
-2. The API will be available at: http://localhost:8000
+services:
+...
 
-3. API Documentation available at:
-   - Swagger UI: http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
+  ocr:
+    image: ghcr.io/luizcarlosfaria/tesseractocrwebapi/tesseract-ocr-aspnet-webapi:2.2.0
+    ports:
+    - "8080:8080"
+    volumes:
+    - ./ocr/tests:/data
+    networks:
+    - ocr_net
 
-## API Usage
+...
 
-Send a POST request to `/api/v1/ocr` with a JSON body:
-
-```json
-{
-    "base64_string": "your_base64_encoded_image_string"
-}
+networks:
+  ocr_net:
+    driver: <overlay|bridge>
 ```
 
-The API will return the extracted text:
+## How to Use
 
-```json
-{
-    "text": "extracted text from the image"
-}
+
+### Upload 
+Send a **POST** to `http://tesseract:8080/tesseract/ocr-by-upload` as **multipart/form-data** with **file** as file (upload)
+
 ```
+curl --location 'http://localhost:8080/tesseract/ocr-by-upload' \
+--form 'file=@"/C:/.../.../your-image.png"'
+```
+
+
+### Shared Folder
+
+Send a **POST** to `http://tesseract:8080/tesseract/ocr-by-filepath` as **FORM-DATA** with **fileName** parameter as a path of image (on container).
+
+```
+curl --location 'http://localhost:8080/tesseract/ocr-by-filepath' \
+--form 'fileName="/data/1.jpg"'
+```
+
+
+## Security Considerations
+
+For security reasons, only `/tmp/` or `/data/` directories (and children) are accepted as source image directories.
+
+## Requirements
+
+This project was designed to run as a Linux Container (using docker, podman, kubernetes, or Containers as a Services platforms).
+
+If you have docker on local machine (windows or linux), clone this repo and execute `docker-compose up --build`. 
+
+If you are on Windows and you don't have docker, sorry, you can't run this project.
