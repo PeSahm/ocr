@@ -2,10 +2,24 @@ version: '3.8'
 
 services:
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./app:/app/app
     environment:
       - DEBUG_MODE=true
+      - APP_NAME=OCR API
+      - HOST=0.0.0.0
+      - PORT=8000
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,26 +1,57 @@
+FROM python:3.9-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    --no-install-recommends \
+    build-essential \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Download EasyOCR models during build
+RUN mkdir -p /root/.EasyOCR/model && \
+    python3 -c "import easyocr; reader = easyocr.Reader(['en'], gpu=False)"
+
+# Final stage
 FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install system dependencies required for EasyOCR
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
+    --no-install-recommends \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
-    libgl1-mesa-glx \
-    && rm -rf /var/lib/apt/lists/*
+    libxrender1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean autoclean \
+    && apt-get autoremove -y
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy Python packages and binaries from builder
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /root/.EasyOCR /home/appuser/.EasyOCR
 
-# Copy the rest of the application
-COPY . .
+# Copy application code
+COPY ./app /app/app
+COPY entrypoint.sh .
 
-# Create a non-root user
-RUN useradd -m appuser && chown -R appuser:appuser /app
+# Make entrypoint executable and fix line endings
+RUN chmod +x entrypoint.sh && \
+    sed -i 's/\r$//' entrypoint.sh && \
+    # Create non-root user
+    useradd -m appuser && \
+    chown -R appuser:appuser /app /home/appuser/.EasyOCR
+
 USER appuser
 
-# Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000
+
+ENTRYPOINT ["./entrypoint.sh"]

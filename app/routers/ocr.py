@@ -1,19 +1,43 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from ..services.ocr_service import process_image
+"""
+OCR endpoint router
+"""
+from fastapi import APIRouter, Depends
+from ..models.ocr import ImageRequest, ImageResponse, ErrorResponse
+from ..services.image_processor import ImageProcessor
+from ..utils.exceptions import OCRException
 
 router = APIRouter()
 
-class ImageRequest(BaseModel):
-    base64_string: str
+async def get_processor() -> ImageProcessor:
+    """Dependency to get ImageProcessor instance."""
+    return ImageProcessor()
 
-class ImageResponse(BaseModel):
-    text: str
-
-@router.post("/ocr", response_model=ImageResponse)
-async def ocr_endpoint(request: ImageRequest):
-    try:
-        result = process_image(request.base64_string)
-        return ImageResponse(text=result)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@router.post("/ocr",
+    response_model=ImageResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    },
+    description="Extract text from a base64 encoded image using OCR"
+)
+async def ocr_endpoint(
+    request: ImageRequest,
+    processor: ImageProcessor = Depends(get_processor)
+):
+    """
+    Extract text from a base64 encoded image.
+    
+    Args:
+        request: Request containing base64 encoded image
+        processor: ImageProcessor instance
+        
+    Returns:
+        ImageResponse: Response containing extracted text
+        
+    Raises:
+        OCRException: If image processing fails
+    """
+    result = processor.process_image(request.base64_string)
+    if "error" in result:
+        raise OCRException(result["error"])
+    return ImageResponse(text=result["text"])
