@@ -1,0 +1,10 @@
+{
+  "app": "ocr",
+  "port": 8080,
+  "platform": "docker",
+  "disks": [],
+  "build": {
+    "location": "germany",
+    "cache": true
+  } 
+}
