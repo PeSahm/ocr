@@ -47,7 +47,7 @@ COPY TesseractApi/PythonOCR/ ./PythonOCR/
 RUN chmod +x ./PythonOCR/*.py
 
 # Create startup script to run both .NET API and EasyOCR server
-RUN echo '#!/bin/bash\npython3 /app/PythonOCR/easyocr_server.py &\ndotnet TesseractApi.dll' > /app/start.sh && chmod +x /app/start.sh
+RUN printf '#!/bin/bash\nset -euo pipefail\npython3 /app/PythonOCR/easyocr_server.py &\nexec dotnet TesseractApi.dll\n' > /app/start.sh && chmod +x /app/start.sh
 
 ENTRYPOINT ["/app/start.sh"]
 
