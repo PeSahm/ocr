@@ -8,6 +8,7 @@
 **/.toolstarget
 **/.vs
 **/.vscode
+**/.idea
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
@@ -20,6 +21,8 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+**/easyocr_models
+**/*.DotSettings.user
 LICENSE
 README.md
 !**/.gitignore
