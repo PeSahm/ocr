@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 import io
 import base64
+import binascii
 
 app = Flask(__name__)
 
@@ -23,10 +24,15 @@ def health():
 @app.route('/ocr', methods=['POST'])
 def ocr():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not data or 'base64' not in data:
+            return jsonify({"error": "Missing base64 field"}), 400
         
-        # Decode base64 image
-        image_data = base64.b64decode(data['base64'].split(',')[-1])
+        try:
+            image_data = base64.b64decode(data['base64'].split(',')[-1])
+        except binascii.Error as exc:
+            return jsonify({"error": f"Invalid base64 payload: {exc}"}), 400
+        
         img = Image.open(io.BytesIO(image_data))
         
         # Convert to RGB if needed
