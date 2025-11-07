@@ -56,7 +56,7 @@ public static partial class Extensions
         ocr.MapPost("/captcha-easy-base64", async ([FromBody]Base64File request, TesseractService tesseractService) =>
         {
             // Validate base64 input
-            if (string.IsNullOrWhiteSpace(request.Base64))
+            if (request == null || string.IsNullOrWhiteSpace(request.Base64))
             {
                 return Results.BadRequest(new { error = "Base64 image data is required and cannot be empty" });
             }
