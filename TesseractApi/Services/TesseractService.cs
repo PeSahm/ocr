@@ -44,6 +44,7 @@ public class TesseractService
     {
         CheckInputFile(inputFileName);
 
+        string responseJson = null;
         try
         {
             // Read file and convert to base64
@@ -57,14 +58,26 @@ public class TesseractService
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
             var response = await httpClient.PostAsync(easyOcrOptions.ServiceUrl, content);
+            
+            // Read response content and status before calling EnsureSuccessStatusCode
+            // to preserve error details from the EasyOCR server
+            responseJson = await response.Content.ReadAsStringAsync();
+            var statusCode = response.StatusCode;
+            
             response.EnsureSuccessStatusCode();
             
-            var responseJson = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<EasyOcrResponse>(responseJson);
             
             logger.LogInformation("EasyOCR recognized: {Text}", result?.text);
             
             return result?.text?.Trim() ?? string.Empty;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode.HasValue)
+        {
+            // Include response details for HTTP errors (responseJson is in scope)
+            logger.LogError(ex, "EasyOCR HTTP error - Status: {StatusCode}, Response: {Response}", 
+                ex.StatusCode, !string.IsNullOrEmpty(responseJson) ? responseJson : "No response body");
+            throw new HttpRequestException($"EasyOCR service returned {ex.StatusCode}: {responseJson}", ex, ex.StatusCode);
         }
         catch (Exception ex)
         {
