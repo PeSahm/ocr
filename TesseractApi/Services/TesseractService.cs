@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.IO;
 using System.Linq;
@@ -9,14 +10,27 @@ using System.Text.Json;
 
 namespace TesseractApi.Services;
 
+public class EasyOcrOptions
+{
+    public string ServiceUrl { get; set; } = "http://localhost:5001/ocr";
+}
+
 public class TesseractService
 {
     private readonly ILogger<TesseractService> logger;
+    private readonly EasyOcrOptions easyOcrOptions;
     private static readonly HttpClient httpClient = new HttpClient();
 
-    public TesseractService(ILogger<TesseractService> logger)
+    public TesseractService(ILogger<TesseractService> logger, IOptions<EasyOcrOptions> easyOcrOptions)
     {
         this.logger = logger;
+        this.easyOcrOptions = easyOcrOptions.Value;
+        
+        // Validate configuration
+        if (string.IsNullOrWhiteSpace(this.easyOcrOptions.ServiceUrl))
+        {
+            throw new ArgumentException("EasyOCR ServiceUrl cannot be null or empty", nameof(easyOcrOptions));
+        }
     }
     
     // EasyOCR - Deep learning based OCR (Fast version using HTTP server)
@@ -35,7 +49,7 @@ public class TesseractService
             var json = JsonSerializer.Serialize(requestData);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
-            var response = await httpClient.PostAsync("http://localhost:5001/ocr", content);
+            var response = await httpClient.PostAsync(easyOcrOptions.ServiceUrl, content);
             response.EnsureSuccessStatusCode();
             
             var responseJson = await response.Content.ReadAsStringAsync();
