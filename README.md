@@ -81,7 +81,8 @@ curl --location 'http://localhost:8080/ocr/captcha-easy-base64' \
 
 The API returns appropriate HTTP status codes:
 - **200 OK**: Successful OCR recognition
-- **400 Bad Request**: Missing or invalid base64 data, malformed JSON
+- **400 Bad Request**: Missing or invalid base64 data, malformed JSON, invalid files
+- **408 Request Timeout**: OCR processing exceeds 30-second timeout
 - **500 Internal Server Error**: Server-side processing errors
 
 ## How It Works
