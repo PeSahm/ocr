@@ -70,6 +70,8 @@ curl --location 'http://localhost:8080/ocr/captcha-easy-base64' \
 }'
 ```
 
+**Note**: The API automatically detects the MIME type from file extensions (PNG, GIF, BMP, TIFF, WebP) and uses the correct MIME type in the data URI. JPEG is used as fallback for unknown formats.
+
 ## How It Works
 
 1. **EasyOCR Server** runs on port 5001 as a Flask application
