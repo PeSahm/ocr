@@ -61,6 +61,11 @@ curl --location 'http://localhost:8080/ocr/captcha-easy' \
 --form 'file=@"/path/to/your-image.png"'
 ```
 
+**File Requirements:**
+- Maximum size: 10MB
+- Allowed formats: JPEG, PNG, GIF, BMP, TIFF, WebP
+- File cannot be empty
+
 ### OCR from Base64
 ```bash
 curl --location 'http://localhost:8080/ocr/captcha-easy-base64' \
