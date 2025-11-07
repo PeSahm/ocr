@@ -1,65 +1,91 @@
-# TesseractOCRWebApi
+# EasyOCR Web API
 
-Tesseract OCR as a Web API.
+EasyOCR (Deep Learning based OCR) as a Web API using .NET and Python.
 
-**Read to Use** - Just execute a docker run or docker compose up.
+**Ready to Use** - Just execute `docker-compose up -d --build`
 
-**Full Source Available** - Go to [github.com/luizcarlosfaria/TesseractOCRWebApi](https://github.com/luizcarlosfaria/TesseractOCRWebApi) and see all details about this project.
+## Features
 
-### How to deploy
+- 🚀 Fast deep learning-based OCR using EasyOCR
+- 🔄 Persistent model caching (models downloaded once and stored locally)
+- 🐳 Optimized Docker build with layer caching
+- 📦 Supports both file upload and base64 image input
 
-```yml
-version: '3.4'
+## Quick Start
 
-services:
-...
-
-  ocr:
-    image: ghcr.io/luizcarlosfaria/tesseractocrwebapi/tesseract-ocr-aspnet-webapi:2.2.0
-    ports:
-    - "8080:8080"
-    volumes:
-    - ./ocr/tests:/data
-    networks:
-    - ocr_net
-
-...
-
-networks:
-  ocr_net:
-    driver: <overlay|bridge>
+```bash
+# Clone and start
+git clone <your-repo-url>
+cd ocr
+docker-compose up -d --build
 ```
 
-## How to Use
+The API will be available at:
+- .NET API: `http://localhost:8080`
+- EasyOCR Server: `http://localhost:5001`
 
+## Docker Optimizations
 
-### Upload 
-Send a **POST** to `http://tesseract:8080/tesseract/ocr-by-upload` as **multipart/form-data** with **file** as file (upload)
+This project includes several Docker optimizations:
 
+1. **Layer Caching**: Dependencies are installed in separate layers for better caching
+2. **Model Persistence**: EasyOCR models are cached in `./easyocr_models/` volume
+3. **Minimal Dependencies**: Only essential libraries are installed
+4. **.dockerignore**: Excludes unnecessary files from build context
+
+### Volume Mapping
+
+The `easyocr_models` folder is mounted as a volume to persist downloaded models between container restarts. This means:
+- First run: Models are downloaded (~100-200MB)
+- Subsequent runs: Models are loaded from local cache (much faster!)
+
+## API Endpoints
+
+### OCR from File Upload
+```bash
+curl --location 'http://localhost:8080/ocr/captcha' \
+--form 'file=@"/path/to/your-image.png"'
 ```
-curl --location 'http://localhost:8080/tesseract/ocr-by-upload' \
---form 'file=@"/C:/.../.../your-image.png"'
+
+### OCR from Base64
+```bash
+curl --location 'http://localhost:8080/ocr/captcha-base64' \
+--header 'Content-Type: application/json' \
+--data '{
+  "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+}'
 ```
 
+## How It Works
 
-### Shared Folder
+1. **EasyOCR Server** runs on port 5001 as a Flask application
+   - Loads the model once at startup
+   - Keeps the model in memory for fast inference
+   
+2. **.NET API** runs on port 8080
+   - Receives OCR requests via HTTP
+   - Forwards images to the EasyOCR server
+   - Returns recognized text
 
-Send a **POST** to `http://tesseract:8080/tesseract/ocr-by-filepath` as **FORM-DATA** with **fileName** parameter as a path of image (on container).
+## Development
 
+### Build and Run Locally
+```bash
+docker-compose up -d --build
 ```
-curl --location 'http://localhost:8080/tesseract/ocr-by-filepath' \
---form 'fileName="/data/1.jpg"'
+
+### View Logs
+```bash
+docker-compose logs -f api
 ```
 
-
-## Security Considerations
-
-For security reasons, only `/tmp/` or `/data/` directories (and children) are accepted as source image directories.
+### Stop Services
+```bash
+docker-compose down
+```
 
 ## Requirements
 
-This project was designed to run as a Linux Container (using docker, podman, kubernetes, or Containers as a Services platforms).
-
-If you have docker on local machine (windows or linux), clone this repo and execute `docker-compose up --build`. 
-
-If you are on Windows and you don't have docker, sorry, you can't run this project.
+- Docker and Docker Compose
+- At least 2GB of free disk space (for models)
+- Linux containers support
