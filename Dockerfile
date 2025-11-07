@@ -1,25 +1,20 @@
 # See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-# Base image with Tesseract OCR and dependencies
+# Base image with EasyOCR dependencies
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-# Install Python, Tesseract, and system dependencies
+# Install Python and system dependencies for EasyOCR
 RUN apt update && \
     apt install -y \
-    tesseract-ocr libtesseract-dev tesseract-ocr-eng tesseract-ocr-fas libleptonica-dev \
-    python3 python3-pip python3-venv \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev libgomp1 libgl1-mesa-glx && \
+    python3 python3-pip \
+    libglib2.0-0 libgomp1 libgl1-mesa-glx && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create symlink for leptonica library
-RUN ln -s /usr/lib/x86_64-linux-gnu/libleptonica.so.6 /usr/lib/x86_64-linux-gnu/libleptonica-1.82.0.so || true && \
-    ln -s /usr/lib/x86_64-linux-gnu/libtesseract.so.5 /usr/lib/x86_64-linux-gnu/libtesseract50.so || true
-
-# Install Python OCR libraries
-RUN python3 -m pip install --no-cache-dir paddlepaddle paddleocr easyocr flask pillow --break-system-packages
+# Install EasyOCR and Flask
+RUN python3 -m pip install --no-cache-dir easyocr flask pillow --break-system-packages
 
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
