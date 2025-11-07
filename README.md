@@ -43,13 +43,13 @@ The `easyocr_models` folder is mounted as a volume to persist downloaded models 
 
 ### OCR from File Upload
 ```bash
-curl --location 'http://localhost:8080/ocr/captcha' \
+curl --location 'http://localhost:8080/ocr/captcha-easy' \
 --form 'file=@"/path/to/your-image.png"'
 ```
 
 ### OCR from Base64
 ```bash
-curl --location 'http://localhost:8080/ocr/captcha-base64' \
+curl --location 'http://localhost:8080/ocr/captcha-easy-base64' \
 --header 'Content-Type: application/json' \
 --data '{
   "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
