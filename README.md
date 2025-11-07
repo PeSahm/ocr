@@ -39,6 +39,20 @@ The `easyocr_models` folder is mounted as a volume to persist downloaded models 
 - First run: Models are downloaded (~100-200MB)
 - Subsequent runs: Models are loaded from local cache (much faster!)
 
+### Configuration
+
+The EasyOCR service URL can be configured via `appsettings.json`:
+
+```json
+{
+  "EasyOCR": {
+    "ServiceUrl": "http://localhost:5001/ocr"
+  }
+}
+```
+
+This allows flexible deployment configurations for different environments.
+
 ## API Endpoints
 
 ### OCR from File Upload
