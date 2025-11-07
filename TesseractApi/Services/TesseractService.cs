@@ -42,7 +42,8 @@ public class TesseractService
         {
             // Read file and convert to base64
             byte[] imageBytes = await File.ReadAllBytesAsync(inputFileName);
-            string base64Image = $"data:image/jpeg;base64,{Convert.ToBase64String(imageBytes)}";
+            string mimeType = GetMimeTypeFromFileName(inputFileName);
+            string base64Image = $"data:{mimeType};base64,{Convert.ToBase64String(imageBytes)}";
             
             // Call the EasyOCR HTTP server
             var requestData = new { base64 = base64Image };
@@ -66,6 +67,22 @@ public class TesseractService
         }
     }
     
+    private static string GetMimeTypeFromFileName(string fileName)
+    {
+        string extension = Path.GetExtension(fileName).ToLowerInvariant();
+        
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".tiff" or ".tif" => "image/tiff",
+            ".webp" => "image/webp",
+            _ => "image/jpeg" // Fallback to JPEG for unknown extensions
+        };
+    }
+
     private class EasyOcrResponse
     {
         public string text { get; set; }
