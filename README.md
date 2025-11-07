@@ -15,7 +15,7 @@ EasyOCR (Deep Learning based OCR) as a Web API using .NET and Python.
 
 ```bash
 # Clone and start
-git clone <your-repo-url>
+git clone https://github.com/PeSahm/ocr.git
 cd ocr
 docker-compose up -d --build
 ```
