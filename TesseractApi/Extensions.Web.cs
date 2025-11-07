@@ -5,6 +5,11 @@ namespace TesseractApi;
 
 public static partial class Extensions
 {
+    private static readonly string[] AllowedImageContentTypes = 
+    { 
+        "image/jpeg", "image/jpg", "image/png", "image/gif", 
+        "image/bmp", "image/tiff", "image/webp" 
+    };
 
 
     public static void MapTesseractEndpoints(this WebApplication app)
@@ -16,6 +21,30 @@ public static partial class Extensions
         // EasyOCR endpoint (Deep learning based) - File upload
         ocr.MapPost("/captcha-easy", async (IFormFile file, TesseractService tesseractService) =>
         {
+            // Validate file input
+            if (file == null)
+            {
+                return Results.BadRequest(new { error = "No file provided" });
+            }
+
+            if (file.Length == 0)
+            {
+                return Results.BadRequest(new { error = "File is empty" });
+            }
+
+            // Check file size (10MB limit)
+            const long maxFileSize = 10 * 1024 * 1024; // 10MB
+            if (file.Length > maxFileSize)
+            {
+                return Results.BadRequest(new { error = $"File size exceeds maximum allowed size of {maxFileSize / (1024 * 1024)}MB" });
+            }
+
+            // Check content type
+            if (!AllowedImageContentTypes.Contains(file.ContentType?.ToLowerInvariant()))
+            {
+                return Results.BadRequest(new { error = $"Invalid file type. Allowed types: {string.Join(", ", AllowedImageContentTypes)}" });
+            }
+
             using DisposableFile disposableFile = await file.SaveFileOnTempDirectory().ConfigureAwait(true);
 
             string returnValue = await tesseractService.RecognizeCaptchaWithEasyOcrAsync(disposableFile.File.FullName);
