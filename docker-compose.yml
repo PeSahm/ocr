@@ -2,8 +2,15 @@ version: '3.8'
 
 services:
   api:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
+      - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      # Cache EasyOCR model files locally to avoid re-downloading
+      - ./easyocr_models:/root/.EasyOCR/model
+    restart: unless-stopped
