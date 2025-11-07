@@ -21,6 +21,12 @@ public class TesseractService
     private readonly EasyOcrOptions easyOcrOptions;
     private static readonly HttpClient httpClient = new HttpClient();
 
+    static TesseractService()
+    {
+        // Set reasonable timeout to prevent hanging requests
+        httpClient.Timeout = TimeSpan.FromSeconds(30);
+    }
+
     public TesseractService(ILogger<TesseractService> logger, IOptions<EasyOcrOptions> easyOcrOptions)
     {
         this.logger = logger;
