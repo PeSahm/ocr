@@ -36,14 +36,55 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Docker image
+    - name: Build Docker image (without push)
       if: github.event_name == 'push'
+      id: build
       uses: docker/build-push-action@v5
       with:
         context: .
-        push: true
+        push: false
+        load: true
         tags: |
           ghcr.io/${{ github.repository }}:latest
           ghcr.io/${{ github.repository }}:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Build Docker image locally
+      if: github.event_name == 'push'
+      run: |
+        docker build -t local-image --cache-from ghcr.io/${{ github.repository }}:latest .
+
+    - name: Check if image changed
+      if: github.event_name == 'push'
+      id: check
+      shell: bash
+      run: |
+        # Try to pull existing image for comparison
+        if docker pull ghcr.io/${{ github.repository }}:latest 2>/dev/null; then
+          # Compare image IDs (simpler than digest comparison)
+          EXISTING_ID=$(docker inspect ghcr.io/${{ github.repository }}:latest --format='{{.Id}}' 2>/dev/null || echo "none")
+          NEW_ID=$(docker inspect local-image --format='{{.Id}}' 2>/dev/null || echo "new")
+          
+          if [ "$EXISTING_ID" = "$NEW_ID" ]; then
+            echo "No changes detected - image ID matches existing: $EXISTING_ID"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected - new image ID: $NEW_ID (old: $EXISTING_ID)"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "No existing image found - first build"
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Tag and push Docker image
+      if: github.event_name == 'push' && steps.check.outputs.changed == 'true'
+      run: |
+        # Tag the local image
+        docker tag local-image ghcr.io/${{ github.repository }}:latest
+        docker tag local-image ghcr.io/${{ github.repository }}:${{ github.sha }}
+        
+        # Push both tags
+        docker push ghcr.io/${{ github.repository }}:latest
+        docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
