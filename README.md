@@ -1,4 +1,5 @@
 # EasyOCR Web API
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/PeSahm/ocr?utm_source=oss&utm_medium=github&utm_campaign=PeSahm%2Focr&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 EasyOCR (Deep Learning based OCR) as a Web API using .NET and Python.
 
